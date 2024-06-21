@@ -3,17 +3,18 @@
 #include <cstdlib>
 #include <limits>
 #include <cctype> // Biblioteca p/ usar a função isalpha
+#include "alunos.h" //incluindo a classe 
 
 using namespace std;
 
-struct aluno{ //molde p/ armazenar as info do aluno
+/*struct aluno{ //molde p/ armazenar as info do aluno
     string nome;
     float n1,n2;
     struct aluno* prox; //ponteiro para guardar o endereço da prox struct criada para "encadear"
-};
+};*/
 
-struct aluno *cabeca=nullptr;//referencia primaria
-struct aluno *ult=nullptr; //ultimo da lista
+Alunos *cabeca=nullptr;//referencia primaria
+Alunos *ult=nullptr; //ultimo da lista
 
 void limpar_tela() {
     system("clear||cls");
@@ -21,8 +22,8 @@ void limpar_tela() {
 
 //prototipos funções
 int menu();
-void criar_struct_alunos(int);
-void preencher_alunos(int);
+void criar_alunos(int);
+void preencher_alunos(int&, float&, float&, string&);
 void exibir_lista_alunos();
 void perguntar_exibir();
 void remover_da_lista();
@@ -31,11 +32,10 @@ string padronizar_nomes();
 //funcao principal
 int main()
 {
-    int num_aluno;//var p/ guardar qnts structs deverao ser criadas e encadeadas
+    int num_aluno;//var p/ guardar qnts alunos deverao ser criados e encadeadas
     num_aluno=menu();
     limpar_tela();
-    criar_struct_alunos(num_aluno);
-    preencher_alunos(num_aluno);
+    criar_alunos(num_aluno);
     perguntar_exibir();
     return 0;
 }
@@ -58,26 +58,28 @@ int menu(){
             num_valido=true;
         }
     }while(!num_valido);
-    return num_aluno; //returna a var pro main
+    return num_aluno; //retorna a var pro main
 }
 
-void criar_struct_alunos(int num_alunos){
-    struct aluno *novo=nullptr;//cria um ponteiro que aponta pra struct (local da funcao)
-    for(int i=0;i<num_alunos;i++){ //rodar a qnt de alunos que deverao ser alocados
-        novo=(struct aluno*)malloc(sizeof(struct aluno));/*pega o tamanho da struct e armazena na MP e guarda 
-        o end. da primeira celula no ponteiro*/
-        if(cabeca==nullptr){ //se não tiver nenhum aluno marcado
-            cabeca=novo;
+void criar_alunos(int num_alunos){
+    int cont = 1;
+    float n1 = 0.0,n2=0.0;
+    string nome = "";
+    for (int i = 0; i < num_alunos; ++i) {
+        preencher_alunos(cont,n1,n2,nome);
+        cont++;
+        Alunos* ptr_aluno = new Alunos(nome,n1,n2);//criar ponteiro para uma instancia do obj
+        if (cabeca == nullptr) {
+            cabeca = ptr_aluno; // Se for o primeiro aluno, cabeça aponta para ele
+        } else {
+            ult->definir_proximo(ptr_aluno); // Se não for o primeiro, o último obj inserido aponta para ele
         }
-        else{
-            ult->prox=novo;//vai receber o novo end. criado para não perder a referencia
-        }
-        ult=novo;//vai apontar pra ultima struct armazenada
+        ult = ptr_aluno; // Atualiza o último para o novo aluno criado
     }
 }
 
 bool validar_nome(const string& nome) { //recebe o nome da funcao preencher_alunos
-    for(char c : nome) { //verifica cada letra colocada
+    for(char c : nome) { //verifica cada letra colocada na string
         if (!isalpha(c) && c != ' ') { // Se qualquer caractere não for uma letra e separador, retorna falso
             return false;
         }
@@ -96,67 +98,67 @@ string padronizar_nomes(string nome){
 }
 
 
-void preencher_alunos(int cont){
-    int cont1=1;//pra usar na comparacao
+void preencher_alunos(int& cont, float& n1, float& n2, string& nome){
     bool num_valido=false;
-    float n1,n2;
-    string nome;
-    struct aluno *aux=nullptr;//pra não mexer diretamente com a cabeca faço uma copia
-    aux=cabeca;//a var local recebe a cabeca
-    while(cont1 <= cont){ //enquanto ainda não preencheu todos os alunos armazenados
-       cout<<"Digite o nome do "<<cont1<<" ° aluno:";
-       cin.ignore(); // Limpar o buffer do teclado antes de usar getline
-       getline(cin, nome);
-       // Se a entrada do usuário foi bem-sucedida e se o nome fornecido é válido
-       if(cin.fail() || nome.empty() || !validar_nome(nome)) {
-           cout << "Erro: Entrada inválida. Por favor, digite um nome válido.\n";
-           cin.clear(); // Limpar o estado de erro
-           cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Ignora entrada inválida
-           continue; // Ignora o resto e volta ao início no loop
-       }
-       nome = padronizar_nomes(nome); //funcao para colocar maiuscula na primeira letra do nome e sobrenome
-       aux->nome=nome;
-       
-       cout<<"\nDigite a primeira nota[0 a 10]: do aluno "<<nome<<":";
-       do{
-           if (!(cin >> n1)) { // Verifica se a entrada não é um número
-            cout<<"Entrada inválida. Por favor, digite um número válido (0 a 10): \n";
-            cin.clear(); 
-            cin.ignore(numeric_limits<streamsize>::max(),'\n');
+    do{
+        cout<<"Digite o nome do "<<cont<<" ° aluno:";
+        cin.ignore(); // Limpar o buffer do teclado antes de usar getline
+        getline(cin, nome);
+        // Se a entrada do usuário foi bem-sucedida e se o nome fornecido é válido
+        if(cin.fail() || nome.empty() || !validar_nome(nome)) {
+            cout << "Erro: Entrada inválida. Por favor, digite um nome válido.\n";
+            cin.clear(); // Limpar o estado de erro
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Ignora entrada inválida
+            continue; // Ignora o resto e volta ao início no loop
         }
-        else if(n1 < 0 || n1 > 10){
-            cout<<"Digite um número inteiro válido (0 a 10): \n";
-            continue;
-        }
-        else{
-            num_valido=true;
-        }
-       }while(!num_valido);//entro no !verdade sai do loop
-       aux->n1=n1; //guarda var na struct que o ponteiro aponta
-       
-       num_valido = false;
-       cout<<"\nDigite a segunda nota[0 a 10] do aluno "<<nome<<":";
-       do{
-           if (!(cin >> n2)) { // Verifica se a entrada não é um número
-            cout<<"Entrada inválida. Por favor, digite um número válido (0 a 10): \n";
-            cin.clear(); // Limpa o estado de erro
-            cin.ignore(numeric_limits<streamsize>::max(),'\n');
-        }
-        else if(n2 < 0 || n2 > 10){
-            cout<<"Digite um número inteiro válido (0 a 10): \n";
-            continue;
-        }
-        else{
-            num_valido=true;
-        }
-       }while(!num_valido);//tratamento de erro
-       cout<<"--------------------------------------------------------------------\n\n";
-       aux->n2=n2;
-       aux=aux->prox;//aux aponta para a proxima struct encadeada
-       cont1++;
+    }while(num_valido);
+    nome = padronizar_nomes(nome); //funcao para colocar maiuscula na primeira letra do nome e sobrenome
+    cout<<"\nDigite a primeira nota[0 a 10]: do aluno "<<nome<<":";
+    do{
+        if (!(cin >> n1)) { // Verifica se a entrada não é um número
+        cout<<"Entrada inválida. Por favor, digite um número válido (0 a 10): \n";
+        cin.clear(); 
+        cin.ignore(numeric_limits<streamsize>::max(),'\n');
     }
+    else if(n1 < 0 || n1 > 10){
+        cout<<"Digite um número inteiro válido (0 a 10): \n";
+        continue;
+    }
+    else{
+        num_valido=true;
+    }
+    }while(!num_valido);//entro no !verdade sai do loop
+    num_valido = false;
+    cout<<"\nDigite a segunda nota[0 a 10] do aluno "<<nome<<":";
+    do{
+        if (!(cin >> n2)) { // Verifica se a entrada não é um número
+        cout<<"Entrada inválida. Por favor, digite um número válido (0 a 10): \n";
+        cin.clear(); // Limpa o estado de erro
+        cin.ignore(numeric_limits<streamsize>::max(),'\n');
+    }
+    else if(n2 < 0 || n2 > 10){
+        cout<<"Digite um número inteiro válido (0 a 10): \n";
+        continue;
+    }
+    else{
+        num_valido=true;
+    }
+    }while(!num_valido);//tratamento de erro
+    cout<<"--------------------------------------------------------------------\n\n";
 }
 
+bool lista_vazia(){
+    if (cabeca == nullptr){
+        cout<<"-----------------------------------\n";
+        cout<<"Lista de alunos vazia!\n";
+        cout<<"-----------------------------------\n";
+        cout << "Pressione Enter para continuar...";
+        cin.ignore(numeric_limits<streamsize>::max(),'\n'); // Limpar o buffer do teclado
+        cin.get(); // Aguardar que o usuário pressione Enter
+        return true;
+    }
+    return false;
+}
 void perguntar_exibir(){
     int op;
     cout<<"\t\tDADOS DEVIDAMENTE PREENCHIDOS: \n\n";
@@ -175,9 +177,15 @@ void perguntar_exibir(){
         }
         switch(op){
             case 1:
+            if(lista_vazia()){
+                continue;
+            }
             exibir_lista_alunos();
             break;
             case 2:
+            if(lista_vazia()){
+                continue;
+            }
             remover_da_lista();
             break;
             case 3:
@@ -191,16 +199,16 @@ void perguntar_exibir(){
 }
 
 void exibir_lista_alunos(){
-    struct aluno *aux=cabeca; //copia da cabeca
+    Alunos *aux=cabeca; //copia o end do primeiro da lista 
 
     cout << "\t\t INFORMAÇÕES DOS ALUNOS REGISTRADOS:\n\n ";
     while(aux!=nullptr){ //enquanto ainda tiver um prox elemento
-        cout << "NOME: " << aux->nome << "\n";
-        cout << "NOTA 1: " << aux->n1 << "\n";
-        cout << "NOTA 2: " << aux->n2 << "\n";
-        cout << "MÉDIA: " << ((aux->n1 + aux->n2) / 2) << "\n"; // calcular média
+        cout << "NOME: " << aux->obter_nome() << "\n";
+        cout << "NOTA 1: " << aux->obter_n1() << "\n";
+        cout << "NOTA 2: " << aux->obter_n2() << "\n";
+        cout << "MÉDIA: " << aux->media() << "\n"; // calcular média
         cout << "--------------------------------------------------\n";
-        aux = aux->prox;
+        aux = aux->obter_proximo(); //passa para o proximo aluno na MP
     }
     cout << "Pressione Enter para continuar...";
     cin.ignore(numeric_limits<streamsize>::max(),'\n'); // Limpar o buffer do teclado
@@ -210,12 +218,12 @@ void exibir_lista_alunos(){
 void remover_da_lista() {
     string nome;
     int cont=1;
-    struct aluno *aux = cabeca;
+    Alunos *aux = cabeca;
     cout<<"=====================================================\n";
     cout<<"\t\tALUNOS REGISTRADOS NA SALA:\n";
     while(aux!=nullptr){
-        cout<<"Aluno(a) "<<cont<<":"<<aux->nome<<"\n";
-        aux=aux->prox;
+        cout<<"Aluno(a) "<<cont<<":"<<aux->obter_nome()<<"\n";
+        aux=aux->obter_proximo();//proximo aluno
         cont++;
     }
     cout<<"=====================================================\n";
@@ -224,18 +232,18 @@ void remover_da_lista() {
     getline(cin, nome);
     //o primeiro char do nome recebe a versão maiúscula dele mesmo
     nome = padronizar_nomes(nome);
-    struct aluno *ant = nullptr;
-    aux = cabeca;
+    Alunos *ant = nullptr; //guardar aluno que antecede o obj "excluido"
+    aux = cabeca;//volta pro inicio da lista de alunos
 
     while (aux != nullptr) {
-        if (aux->nome == nome) {
+        if (aux->obter_nome() == nome) {
             break; // Nome encontrado, sair do loop
         }
         ant = aux;
-        aux = aux->prox;
+        aux = aux->obter_proximo();
     }
 
-    if (aux == nullptr) { //se rodou tudo e não achou
+    if (aux == nullptr) { //se rodou tudo e não achou o nome
         cout << "Aluno(a) não encontrado.\n";
         cout << "Pressione Enter para continuar...";
         cin.get(); // Aguardar que o usuário pressione Enter para continuar
@@ -244,17 +252,15 @@ void remover_da_lista() {
 
     // Ajustar ponteiros para remover o nó da lista
     if (ant == nullptr) { // Se for o primeiro da lista para remover
-        cabeca = aux->prox;
+        cabeca = aux->obter_proximo();
     } else {
-        ant->prox = aux->prox;
+    //o anterior recebe o proximo obj para não perder referencia
+        ant->definir_proximo(aux->obter_proximo()); 
     }
-
     if (aux == ult) { // Se o nó a ser removido for o último da lista
         ult = ant; //recebe o end. do anterior
     }
-
-    // Liberar memória alocada do nó removido
-    free(aux);
+    delete aux; // Liberando a memória alocada do obj
 
     cout << "Aluno apagado com sucesso!\n";
     cout << "Pressione Enter para continuar...";
